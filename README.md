@@ -45,7 +45,7 @@ java HelloWorld
 ## Course structure
 
 ```
-Java-Basics/
+Java-Programming-Basics/
 ├── 01-what-is-java/
 ├── 02-variables/
 ├── 03-data-types/
