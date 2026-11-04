@@ -59,3 +59,11 @@ Java-Basics/
 ## Author
 
 **Abdalla Ali**, Software Engineering student, learning Java 🇸🇴
+
+## Follow me on GitHub
+
+You can find me and follow my work on GitHub:
+
+👉 **[github.com/engabdullah-2024](https://github.com/engabdullah-2024)**
+
+If this course helped you, please give the repo a ⭐ star and follow me for more projects!
