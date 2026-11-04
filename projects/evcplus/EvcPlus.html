@@ -1,0 +1,1461 @@
+<!doctype html>
+<html lang="so">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>EVCPlus Phone</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root { --page: #d9dde3; }
+  @media (prefers-color-scheme: dark) { :root { --page: #0b0c0e; } }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    background: var(--page); display: flex; align-items: center; justify-content: center;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", Inter, "Segoe UI", system-ui, sans-serif; letter-spacing: -.01em;
+    overflow: hidden; user-select: none;
+  }
+  button { font: inherit; cursor: pointer; }
+
+  /* ================= DEVICE ================= */
+  .device {
+    position: relative; width: 392px; height: 820px; border-radius: 62px; padding: 12px;
+    background: #1c1c1e;
+    box-shadow: 0 0 0 2px #3a3a3c, 0 0 0 5px #111, 0 30px 80px rgba(0,0,0,.45);
+  }
+  .side-btn { position: absolute; background: #2c2c2e; border-radius: 3px; }
+  .btn-power { right: -8px; top: 220px; width: 5px; height: 96px; cursor: pointer; }
+  .btn-action { left: -8px; top: 150px; width: 5px; height: 34px; }
+  .btn-volup { left: -8px; top: 210px; width: 5px; height: 62px; }
+  .btn-voldn { left: -8px; top: 285px; width: 5px; height: 62px; }
+
+  .screen {
+    --bg: #f2f2f7; --card: #ffffff; --text: #000; --muted: #8e8e93; --sep: rgba(60,60,67,.18);
+    --key: #e5e5ea; --blue: #007aff; --green: #34c759; --red: #ff3b30; --bubble: #e9e9eb;
+    --alert: rgba(242,242,247,.86);
+    position: relative; width: 100%; height: 100%; border-radius: 50px; overflow: hidden; background: #000;
+    color: var(--text);
+  }
+  .screen[data-theme="dark"] {
+    --bg: #000; --card: #1c1c1e; --text: #fff; --muted: #8e8e93; --sep: rgba(84,84,88,.6);
+    --key: #333335; --bubble: #26252a; --alert: rgba(37,37,39,.9);
+  }
+  .island {
+    position: absolute; top: 11px; left: 50%; transform: translateX(-50%); width: 122px; height: 36px;
+    background: #000; border-radius: 20px; z-index: 80;
+  }
+
+  /* ================= STATUS BAR ================= */
+  .status {
+    position: absolute; top: 0; left: 0; right: 0; height: 54px; z-index: 40; padding: 18px 34px 0 40px;
+    display: flex; justify-content: space-between; align-items: center; font-weight: 600; font-size: 16px;
+    color: #fff; pointer-events: none; transition: color .2s;
+  }
+  .status.dark-text { color: #000; }
+  .screen[data-theme="dark"] .status.dark-text { color: #fff; }
+  .status .icons { display: flex; gap: 6px; align-items: center; }
+  .status svg { fill: currentColor; }
+
+  /* ================= WALLPAPER / LOCK ================= */
+  .wallpaper { position: absolute; inset: 0; background: var(--wall); transition: background .4s; }
+  .lock {
+    position: absolute; inset: 0; z-index: 30; display: flex; flex-direction: column; align-items: center;
+    color: #fff; padding-top: 90px; transition: transform .45s cubic-bezier(.2,.8,.2,1), opacity .45s;
+    background: var(--wall);
+  }
+  .lock.hidden { transform: translateY(-100%); opacity: 0; pointer-events: none; }
+  .lock .date { font-size: 20px; font-weight: 600; opacity: .9; }
+  .lock .time { font-size: 96px; font-weight: 700; line-height: 1; letter-spacing: -2px; margin-top: 4px; }
+  .lock .lock-ic { font-size: 18px; margin-bottom: 6px; }
+  .lock .lock-notifs { width: 100%; padding: 0 12px; margin-top: 30px; display: flex; flex-direction: column; gap: 8px; }
+  .lock .hint { position: absolute; bottom: 44px; font-size: 14px; opacity: .8; }
+  .lock .quick { position: absolute; bottom: 50px; left: 46px; right: 46px; display: flex; justify-content: space-between; }
+  .lock .quick span {
+    width: 50px; height: 50px; border-radius: 50%; background: rgba(0,0,0,.3); backdrop-filter: blur(10px);
+    display: flex; align-items: center; justify-content: center; font-size: 22px;
+  }
+
+  /* ================= HOME ================= */
+  .home { position: absolute; inset: 0; transition: transform .35s, opacity .35s; }
+  .home.behind { transform: scale(.92); opacity: 0; pointer-events: none; }
+  .grid {
+    display: grid; grid-template-columns: repeat(4, 1fr); row-gap: 26px; padding: 74px 22px 0;
+  }
+  .app-icon { display: flex; flex-direction: column; align-items: center; gap: 6px; background: none; border: none; padding: 0; }
+  .app-icon .ic {
+    width: 62px; height: 62px; border-radius: 15px; display: flex; align-items: center; justify-content: center;
+    font-size: 32px; box-shadow: 0 2px 6px rgba(0,0,0,.2); position: relative; overflow: hidden;
+  }
+  .app-icon:active .ic { filter: brightness(.75); }
+  .app-icon .lbl { font-size: 12px; color: #fff; text-shadow: 0 1px 3px rgba(0,0,0,.5); }
+  .badge {
+    position: absolute; top: -6px; right: -6px; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px;
+    background: #ff3b30; color: #fff; font-size: 13px; font-weight: 600; display: none; align-items: center; justify-content: center;
+    z-index: 2;
+  }
+  .ic-wrap { position: relative; }
+  .widget {
+    grid-column: span 2; grid-row: span 2; border-radius: 22px; padding: 14px 16px; color: #fff;
+    background: linear-gradient(180deg, #3b8be0, #66aef0); box-shadow: 0 2px 8px rgba(0,0,0,.2);
+    display: flex; flex-direction: column; justify-content: space-between; height: 156px; align-self: start;
+    border: none; text-align: left;
+  }
+  .widget .city { font-weight: 600; font-size: 15px; }
+  .widget .deg { font-size: 44px; font-weight: 300; line-height: 1; }
+  .widget .cond { font-size: 13px; font-weight: 600; }
+  .dots { position: absolute; bottom: 124px; left: 0; right: 0; display: flex; justify-content: center; gap: 8px; }
+  .dots i { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.5); }
+  .dots i.on { background: #fff; }
+  .dock {
+    position: absolute; bottom: 22px; left: 12px; right: 12px; height: 92px; border-radius: 34px;
+    background: rgba(255,255,255,.22); backdrop-filter: blur(24px) saturate(1.6);
+    display: flex; justify-content: space-around; align-items: center; padding: 0 8px;
+  }
+  .dock .lbl { display: none; }
+
+  /* icon colors */
+  .i-phone { background: linear-gradient(#5ef777, #2fbf4a); }
+  .i-msg { background: linear-gradient(#5ef777, #2fbf4a); }
+  .i-photos { background: #fff; }
+  .i-camera { background: linear-gradient(#e4e4e6, #a9a9ae); }
+  .i-calc { background: #1c1c1e; }
+  .i-clock { background: #000; }
+  .i-notes { background: linear-gradient(#fff 0 26%, #fbd54a 26% 30%, #fffdf3 30%); }
+  .i-weather { background: linear-gradient(#2f7ee6, #73b5f7); }
+  .i-settings { background: linear-gradient(#b4b4b9, #7c7c82); }
+  .i-calendar { background: #fff; flex-direction: column; gap: 0; }
+  .i-calendar b { color: #ff3b30; font-size: 10px; font-weight: 600; margin-top: -2px; }
+  .i-calendar span { color: #000; font-size: 30px; font-weight: 300; line-height: 1; }
+  .app-icon .ic.i-evc { background: linear-gradient(135deg, #11a95a, #087a3e); color: #fff; font-size: 15px; font-weight: 800; letter-spacing: -.5px; }
+  .i-contacts { background: linear-gradient(#d9d9de, #b4b4ba); }
+
+  /* ================= APPS ================= */
+  .app {
+    position: absolute; inset: 0; background: var(--bg); color: var(--text); display: none; flex-direction: column;
+    padding-top: 54px; z-index: 10;
+  }
+  .app.active { display: flex; animation: open .32s cubic-bezier(.2,.9,.3,1); }
+  @keyframes open { from { transform: scale(.35); opacity: 0; border-radius: 40px; } to { transform: scale(1); opacity: 1; } }
+  .app.dark { background: #000; color: #fff; }
+  .large-title { font-size: 34px; font-weight: 700; padding: 6px 18px 10px; margin: 0; }
+  .scroll { flex: 1; overflow-y: auto; padding-bottom: 40px; }
+  .scroll::-webkit-scrollbar { display: none; }
+  .navbar { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; min-height: 44px; }
+  .navbar .back { color: var(--blue); background: none; border: none; font-size: 17px; padding: 4px; }
+  .navbar .ttl { font-weight: 600; font-size: 17px; }
+  .group { background: var(--card); border-radius: 12px; margin: 0 16px 22px; overflow: hidden; }
+  .cell {
+    display: flex; align-items: center; gap: 12px; padding: 11px 16px; font-size: 17px; border: none; width: 100%;
+    background: none; color: var(--text); text-align: left; position: relative;
+  }
+  .cell + .cell::before { content: ""; position: absolute; top: 0; left: 16px; right: 0; height: .5px; background: var(--sep); }
+  .cell .sub { color: var(--muted); font-size: 15px; margin-left: auto; }
+  .cell .sq { width: 30px; height: 30px; border-radius: 7px; display: flex; align-items: center; justify-content: center; font-size: 17px; color: #fff; }
+  .toggle { margin-left: auto; width: 51px; height: 31px; border-radius: 16px; background: #e9e9ea; position: relative; transition: background .2s; border: none; }
+  .screen[data-theme="dark"] .toggle { background: #39393d; }
+  .toggle::after { content: ""; position: absolute; top: 2px; left: 2px; width: 27px; height: 27px; border-radius: 50%; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,.2); transition: left .2s; }
+  .toggle.on { background: var(--green) !important; }
+  .toggle.on::after { left: 22px; }
+  .section-h { font-size: 13px; color: var(--muted); text-transform: uppercase; padding: 0 32px 6px; }
+
+  /* ----- Phone app ----- */
+  .phone-page { flex: 1; display: none; flex-direction: column; overflow: hidden; }
+  .phone-page.on { display: flex; }
+  .dial-display {
+    height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: flex-end;
+    font-size: 38px; padding: 0 20px 8px; word-break: break-all; text-align: center; line-height: 1.1;
+  }
+  .dial-display small { font-size: 15px; color: var(--blue); height: 20px; margin-top: 6px; }
+  .keys { display: grid; grid-template-columns: repeat(3, 80px); gap: 16px 26px; justify-content: center; margin-top: 18px; }
+  .k {
+    width: 80px; height: 80px; border-radius: 50%; border: none; background: var(--key); color: var(--text);
+    display: flex; flex-direction: column; align-items: center; justify-content: center; transition: filter .1s;
+  }
+  .k:active { filter: brightness(.8); }
+  .k b { font-size: 36px; font-weight: 400; line-height: 1; }
+  .k small { font-size: 10px; font-weight: 700; letter-spacing: 2px; margin-top: 2px; min-height: 12px; }
+  .key-row { display: grid; grid-template-columns: repeat(3, 80px); gap: 26px; justify-content: center; margin-top: 16px; align-items: center; }
+  .callbtn { grid-column: 2; width: 80px; height: 80px; border-radius: 50%; border: none; background: var(--green); display: flex; align-items: center; justify-content: center; }
+  .delbtn { background: none; border: none; color: var(--text); font-size: 26px; visibility: hidden; }
+  .tabbar {
+    display: flex; justify-content: space-around; padding: 8px 0 30px; border-top: .5px solid var(--sep);
+    background: var(--card);
+  }
+  .tabbar button { background: none; border: none; color: var(--muted); font-size: 10px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+  .tabbar button span { font-size: 22px; filter: grayscale(1); opacity: .7; }
+  .tabbar button.on { color: var(--blue); }
+  .tabbar button.on span { filter: none; opacity: 1; }
+  .avatar {
+    width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(#a5abb8, #858b98); color: #fff;
+    display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 16px; flex-shrink: 0;
+  }
+
+  /* call screen */
+  .callscreen {
+    position: absolute; inset: 0; z-index: 20; display: none; flex-direction: column; align-items: center;
+    background: linear-gradient(#4a5468, #23262e); color: #fff; padding-top: 110px;
+  }
+  .callscreen.on { display: flex; }
+  .callscreen .nm { font-size: 32px; }
+  .callscreen .st { font-size: 17px; opacity: .7; margin-top: 6px; }
+  .callgrid { display: grid; grid-template-columns: repeat(3, 76px); gap: 22px 28px; margin-top: auto; margin-bottom: 40px; }
+  .callgrid div { display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 12px; }
+  .callgrid div span { width: 76px; height: 76px; border-radius: 50%; background: rgba(255,255,255,.18); display: flex; align-items: center; justify-content: center; font-size: 28px; }
+  .endcall { width: 76px; height: 76px; border-radius: 50%; border: none; background: var(--red); margin-bottom: 70px; font-size: 30px; }
+
+  /* ----- Messages ----- */
+  .thread-row { display: flex; gap: 12px; padding: 10px 16px; align-items: center; border: none; background: none; width: 100%; color: var(--text); text-align: left; position: relative; }
+  .thread-row .t-main { flex: 1; min-width: 0; border-bottom: .5px solid var(--sep); padding-bottom: 10px; }
+  .thread-row .t-top { display: flex; justify-content: space-between; font-size: 17px; font-weight: 600; }
+  .thread-row .t-top small { color: var(--muted); font-weight: 400; font-size: 14px; }
+  .thread-row .t-prev { color: var(--muted); font-size: 15px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+  .thread-row .dot { width: 10px; height: 10px; border-radius: 50%; background: var(--blue); position: absolute; left: 4px; top: 24px; display: none; }
+  .bubbles { flex: 1; overflow-y: auto; padding: 10px 14px 16px; display: flex; flex-direction: column; gap: 6px; }
+  .bubble { max-width: 78%; padding: 8px 13px; border-radius: 19px; font-size: 16px; line-height: 1.3; white-space: pre-wrap; user-select: text; }
+  .bubble.them { background: var(--bubble); align-self: flex-start; border-bottom-left-radius: 6px; }
+  .bubble.me { background: var(--blue); color: #fff; align-self: flex-end; border-bottom-right-radius: 6px; }
+  .btime { font-size: 11px; color: var(--muted); text-align: center; margin: 8px 0 2px; }
+  .composer { display: flex; gap: 8px; padding: 8px 12px 30px; align-items: center; }
+  .composer input { flex: 1; border: 1px solid var(--sep); border-radius: 18px; padding: 8px 14px; font-size: 16px; background: var(--card); color: var(--text); outline: none; }
+  .composer button { width: 32px; height: 32px; border-radius: 50%; border: none; background: var(--blue); color: #fff; font-size: 18px; }
+
+  /* ----- Photos ----- */
+  .photo-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; }
+  .photo { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-size: 38px; background-size: cover; background-position: center; border: none; padding: 0; }
+  .viewer { position: absolute; inset: 0; background: #000; z-index: 20; display: none; flex-direction: column; padding-top: 54px; }
+  .viewer.on { display: flex; }
+  .viewer .big { flex: 1; display: flex; align-items: center; justify-content: center; font-size: 120px; background-size: contain; background-repeat: no-repeat; background-position: center; }
+  .viewer .cap { color: #fff; text-align: center; padding: 10px 0 40px; font-size: 15px; }
+
+  /* ----- Camera ----- */
+  .cam-view { flex: 1; background: #111; position: relative; display: flex; align-items: center; justify-content: center; color: #888; font-size: 14px; text-align: center; padding: 20px; }
+  .cam-view video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+  .cam-bar { height: 170px; display: flex; align-items: center; justify-content: space-around; background: #000; padding-bottom: 30px; }
+  .shutter { width: 74px; height: 74px; border-radius: 50%; border: 4px solid #fff; background: #fff; box-shadow: inset 0 0 0 3px #000; }
+  .shutter:active { transform: scale(.92); }
+  .cam-thumb { width: 46px; height: 46px; border-radius: 8px; background: #333; background-size: cover; border: none; }
+  .flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; transition: opacity .15s; }
+
+  /* ----- Calculator ----- */
+  .calc-display { flex: 1; display: flex; align-items: flex-end; justify-content: flex-end; padding: 0 28px 10px; font-size: 86px; font-weight: 300; color: #fff; overflow: hidden; white-space: nowrap; }
+  .calc-keys { display: grid; grid-template-columns: repeat(4, 76px); gap: 14px; justify-content: center; padding-bottom: 50px; }
+  .ck { width: 76px; height: 76px; border-radius: 38px; border: none; font-size: 32px; background: #333; color: #fff; }
+  .ck.fn { background: #a5a5a5; color: #000; font-size: 28px; }
+  .ck.op { background: #ff9f0a; font-size: 38px; }
+  .ck.op.sel { background: #fff; color: #ff9f0a; }
+  .ck.zero { width: 166px; grid-column: span 2; text-align: left; padding-left: 30px; }
+  .ck:active { filter: brightness(1.3); }
+
+  /* ----- Clock / Weather / Calendar / Notes ----- */
+  .bigclock { text-align: center; font-size: 72px; font-weight: 200; padding: 10px 0 4px; font-variant-numeric: tabular-nums; }
+  .bigdate { text-align: center; color: #8e8e93; margin-bottom: 20px; }
+  .wc { display: flex; justify-content: space-between; align-items: center; padding: 14px 20px; border-top: .5px solid #333; }
+  .wc .c1 small { color: #8e8e93; font-size: 13px; display: block; }
+  .wc .c1 b { font-size: 22px; font-weight: 400; }
+  .wc .c2 { font-size: 46px; font-weight: 200; font-variant-numeric: tabular-nums; }
+  .weather-app { background: linear-gradient(#2b6fd1, #6aaef2 70%) !important; color: #fff !important; }
+  .w-head { text-align: center; padding: 30px 0 20px; }
+  .w-head .c { font-size: 32px; }
+  .w-head .d { font-size: 100px; font-weight: 200; line-height: 1; }
+  .w-head .s { font-size: 19px; font-weight: 500; }
+  .w-card { background: rgba(255,255,255,.16); border-radius: 16px; margin: 0 16px 14px; padding: 12px 16px; backdrop-filter: blur(10px); }
+  .w-card h4 { margin: 0 0 8px; font-size: 12px; font-weight: 600; opacity: .7; text-transform: uppercase; }
+  .hours { display: flex; justify-content: space-between; text-align: center; font-size: 15px; }
+  .hours div { display: flex; flex-direction: column; gap: 8px; }
+  .days div { display: flex; justify-content: space-between; padding: 8px 0; border-top: .5px solid rgba(255,255,255,.25); font-size: 17px; }
+  .days div:first-child { border-top: none; }
+  .cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; row-gap: 14px; padding: 8px 10px; font-size: 19px; }
+  .cal-grid .h { font-size: 12px; color: var(--muted); }
+  .cal-grid .today { background: var(--red); color: #fff; border-radius: 50%; width: 36px; height: 36px; line-height: 36px; margin: -8px auto 0; font-weight: 600; }
+  .notes-area { flex: 1; margin: 0 16px 40px; border: none; resize: none; background: transparent; color: var(--text); font: 17px/1.45 inherit; outline: none; font-family: inherit; }
+  .wall-row { display: flex; gap: 12px; padding: 12px 16px; }
+  .wall-opt { width: 54px; height: 96px; border-radius: 10px; border: 3px solid transparent; }
+  .wall-opt.on { border-color: var(--blue); }
+
+  /* ================= iOS ALERT (USSD) ================= */
+  .alert-wrap { position: absolute; inset: 0; z-index: 60; background: rgba(0,0,0,.28); display: none; align-items: center; justify-content: center; }
+  .alert-wrap.on { display: flex; }
+  .alert {
+    width: 276px; border-radius: 14px; background: var(--alert); backdrop-filter: blur(30px) saturate(1.8);
+    color: var(--text); text-align: center; overflow: hidden; animation: pop .2s ease-out;
+  }
+  @keyframes pop { from { transform: scale(1.15); opacity: 0; } }
+  .alert-body { padding: 18px 16px 14px; }
+  .alert-text { font-size: 14px; line-height: 1.38; white-space: pre-wrap; max-height: 360px; overflow-y: auto; user-select: text; }
+  .alert-input {
+    width: 100%; margin-top: 12px; padding: 6px 8px; font-size: 14px; border-radius: 6px;
+    border: .5px solid var(--sep); background: var(--card); color: var(--text); outline: none;
+  }
+  .alert-btns { display: flex; border-top: .5px solid var(--sep); }
+  .alert-btns button { flex: 1; background: none; border: none; color: var(--blue); font-size: 17px; padding: 11px 0; }
+  .alert-btns button + button { border-left: .5px solid var(--sep); font-weight: 600; }
+  .alert-btns button:active { background: rgba(127,127,127,.15); }
+  .spinner { width: 22px; height: 22px; margin: 0 auto 10px; border-radius: 50%; border: 2.5px solid var(--sep); border-top-color: var(--muted); animation: spin .8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ================= NOTIFICATION BANNER ================= */
+  .banner {
+    position: absolute; top: 10px; left: 10px; right: 10px; z-index: 70; border-radius: 22px; padding: 12px 14px;
+    background: rgba(245,245,247,.88); backdrop-filter: blur(24px); color: #000; display: flex; gap: 10px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.25); transform: translateY(-140%); transition: transform .4s cubic-bezier(.2,.9,.3,1.1);
+    cursor: pointer;
+  }
+  .screen[data-theme="dark"] .banner { background: rgba(40,40,42,.9); color: #fff; }
+  .banner.on { transform: translateY(0); }
+  .banner .ic { width: 38px; height: 38px; border-radius: 9px; font-size: 20px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .banner .b-top { display: flex; justify-content: space-between; font-size: 15px; font-weight: 600; }
+  .banner .b-top small { font-weight: 400; color: #8e8e93; font-size: 13px; }
+  .banner .b-txt { font-size: 15px; line-height: 1.3; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; }
+  .lock-notif { border-radius: 20px; padding: 12px 14px; background: rgba(255,255,255,.25); backdrop-filter: blur(20px); font-size: 14px; color: #fff; }
+  .lock-notif b { display: block; font-size: 15px; }
+
+  /* ================= SVG ICONS ================= */
+  .ic svg { display: block; }
+  .i-notes, .i-calc, .i-clock, .i-photos { padding: 0; }
+  [data-glyph] { display: inline-flex; align-items: center; justify-content: center; }
+  .tabbar button span { filter: none !important; opacity: 1 !important; color: var(--muted); height: 26px; }
+  .tabbar button.on span { color: var(--blue); }
+  .callgrid div span { color: #fff; }
+  .endcall { color: #fff; display: flex; align-items: center; justify-content: center; }
+  .lock .quick span { color: #fff; cursor: pointer; }
+  .lock .quick span.on { background: #fff; color: #000; }
+  .sq { color: #fff; }
+
+  /* app close animation (back to icon) */
+  .app.closing { display: flex; animation: closeApp .28s cubic-bezier(.4,0,.6,1) forwards; pointer-events: none; }
+  @keyframes closeApp { to { transform: scale(.18); opacity: 0; border-radius: 60px; } }
+
+  /* ================= CONTROL CENTER ================= */
+  #ccHot { position: absolute; top: 0; right: 0; width: 150px; height: 46px; z-index: 42; cursor: pointer; }
+  .cc {
+    position: absolute; inset: 0; z-index: 65; background: rgba(20,20,24,.42); backdrop-filter: blur(28px) saturate(1.4);
+    transform: translateY(-102%); transition: transform .38s cubic-bezier(.2,.9,.3,1); padding: 70px 24px 0; color: #fff;
+  }
+  .cc.on { transform: translateY(0); }
+  .cc-grid { display: grid; grid-template-columns: repeat(4, 70px); grid-auto-rows: 70px; gap: 16px; justify-content: center; }
+  .cc-tile { background: rgba(120,120,128,.38); border-radius: 20px; border: none; color: #fff; display: flex; align-items: center; justify-content: center; }
+  .cc-tile.conn { grid-column: span 2; grid-row: span 2; display: grid; grid-template-columns: 1fr 1fr; place-items: center; padding: 10px; border-radius: 24px; }
+  .cc-tile.music { grid-column: span 2; grid-row: span 2; flex-direction: column; justify-content: space-between; padding: 16px; border-radius: 24px; align-items: stretch; }
+  .mctl { display: flex; justify-content: space-around; }
+  .cc-round { width: 54px; height: 54px; border-radius: 50%; border: none; background: rgba(255,255,255,.22); color: #fff; }
+  .cc-round.on { background: #007aff; }
+  .cc-round.on.green { background: #34c759; }
+  #ccPlane.on { background: #ff9500; }
+  .cc-tile.sq1.on { background: #fff; color: #000; }
+  .cc-tile.vslider { grid-row: span 2; position: relative; overflow: hidden; align-items: flex-end; padding-bottom: 14px; border-radius: 22px; cursor: ns-resize; touch-action: none; }
+  .cc-tile.vslider .fill { position: absolute; left: 0; right: 0; bottom: 0; height: 100%; background: #fff; }
+  .cc-tile.vslider span { position: relative; color: #8e8e93; }
+  #dim { position: absolute; inset: 0; background: #000; opacity: 0; pointer-events: none; z-index: 100; border-radius: 50px; }
+
+  /* ================= HOME INDICATOR ================= */
+  .home-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 30px; z-index: 45; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 8px; cursor: pointer; }
+  .home-bar i { width: 140px; height: 5px; border-radius: 3px; background: #fff; transition: background .2s; }
+  .home-bar.dark-bar i { background: #000; }
+  .screen[data-theme="dark"] .home-bar.dark-bar i { background: #fff; }
+</style>
+</head>
+<body>
+
+<div class="device" id="device">
+  <div class="side-btn btn-action"></div>
+  <div class="side-btn btn-volup"></div>
+  <div class="side-btn btn-voldn"></div>
+  <div class="side-btn btn-power" id="power" title="Lock"></div>
+
+  <div class="screen" id="screen">
+    <div class="island"></div>
+
+    <!-- STATUS BAR -->
+    <div class="status" id="status">
+      <span id="sTime">9:41</span>
+      <span class="icons">
+        <span id="sPlane" style="display:none">✈︎</span>
+        <svg id="sSignal" width="18" height="12" viewBox="0 0 18 12"><rect x="0" y="8" width="3" height="4" rx="1"/><rect x="5" y="5.5" width="3" height="6.5" rx="1"/><rect x="10" y="3" width="3" height="9" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></svg>
+        <svg id="sWifi" width="16" height="12" viewBox="0 0 16 12"><path d="M8 2.2c2.3 0 4.4.9 6 2.4l1.2-1.3C13.3 1.5 10.8.4 8 .4S2.7 1.5.8 3.3L2 4.6c1.6-1.5 3.7-2.4 6-2.4zm0 3.6c1.3 0 2.5.5 3.4 1.3l1.2-1.3C11.4 4.7 9.8 4 8 4s-3.4.7-4.6 1.8l1.2 1.3C5.5 6.3 6.7 5.8 8 5.8zm0 3.5c.4 0 .8.2 1.1.4L8 11.6 6.9 9.7c.3-.2.7-.4 1.1-.4z"/></svg>
+        <svg width="27" height="13" viewBox="0 0 27 13"><rect x=".5" y=".5" width="23" height="12" rx="3.5" fill="none" stroke="currentColor" opacity=".4"/><rect x="2" y="2" width="17" height="9" rx="2"/><rect x="24.5" y="4.5" width="1.6" height="4" rx=".8" opacity=".4"/></svg>
+      </span>
+    </div>
+
+    <!-- HOME SCREEN -->
+    <div class="wallpaper" id="wallpaper"></div>
+    <div class="home" id="home">
+      <div class="grid">
+        <button class="widget" data-app="weather">
+          <div><div class="city">Muqdisho ➤</div><div class="deg">31°</div></div>
+          <div><div class="cond">☀️ Qorrax</div><div style="font-size:13px">H:32° L:25°</div></div>
+        </button>
+        <button class="app-icon" data-app="calendar"><div class="ic i-calendar"><b id="calDay">WED</b><span id="calNum">4</span></div><span class="lbl">Calendar</span></button>
+        <button class="app-icon" data-app="photos"><div class="ic i-photos" data-icon="photos"></div><span class="lbl">Photos</span></button>
+        <button class="app-icon" data-app="camera"><div class="ic i-camera" data-icon="camera"></div><span class="lbl">Camera</span></button>
+        <button class="app-icon" data-app="clock"><div class="ic i-clock" data-icon="clock"></div><span class="lbl">Clock</span></button>
+        <button class="app-icon" data-app="notes"><div class="ic i-notes" data-icon="notes"></div><span class="lbl">Notes</span></button>
+        <button class="app-icon" data-app="calc"><div class="ic i-calc" data-icon="calc"></div><span class="lbl">Calculator</span></button>
+        <button class="app-icon" data-app="weather"><div class="ic i-weather" data-icon="weather"></div><span class="lbl">Weather</span></button>
+        <button class="app-icon" data-app="evc"><div class="ic i-evc">EVC</div><span class="lbl">EVCPlus</span></button>
+      </div>
+      <div class="dots"><i class="on"></i><i></i></div>
+      <div class="dock">
+        <button class="app-icon" data-app="phone"><div class="ic-wrap"><div class="ic i-phone" data-icon="phone"></div></div><span class="lbl">Phone</span></button>
+        <button class="app-icon" data-app="messages"><div class="ic-wrap"><span class="badge" id="msgBadge"></span><div class="ic i-msg" data-icon="messages"></div></div><span class="lbl">Messages</span></button>
+        <button class="app-icon" data-app="contacts"><div class="ic i-contacts" data-icon="contacts"></div><span class="lbl">Contacts</span></button>
+        <button class="app-icon" data-app="settings"><div class="ic i-settings" data-icon="settings"></div><span class="lbl">Settings</span></button>
+      </div>
+    </div>
+
+    <!-- ===== PHONE APP ===== -->
+    <div class="app" id="app-phone" data-statusdark="1">
+      <div class="phone-page" id="pg-recents">
+        <h1 class="large-title">Recents</h1>
+        <div class="scroll"><div class="group" id="recentsList"></div></div>
+      </div>
+      <div class="phone-page" id="pg-contacts">
+        <h1 class="large-title">Contacts</h1>
+        <div class="scroll"><div class="group" id="contactsList"></div></div>
+      </div>
+      <div class="phone-page on" id="pg-keypad">
+        <div class="dial-display"><span id="dialNum"></span><small id="dialName"></small></div>
+        <div class="keys" id="keys"></div>
+        <div class="key-row">
+          <span></span>
+          <button class="callbtn" id="callBtn"><svg width="34" height="34" viewBox="0 0 24 24" fill="#fff"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z"/></svg></button>
+          <button class="delbtn" id="delBtn">⌫</button>
+        </div>
+        <div style="flex:1"></div>
+      </div>
+      <div class="tabbar" id="phoneTabs">
+        <button data-pg="recents"><span data-glyph="recents"></span>Recents</button>
+        <button data-pg="contacts"><span data-glyph="personCircle"></span>Contacts</button>
+        <button data-pg="keypad" class="on"><span data-glyph="keypad"></span>Keypad</button>
+      </div>
+      <div class="callscreen" id="callscreen">
+        <div class="nm" id="callName"></div>
+        <div class="st" id="callState">calling…</div>
+        <div class="callgrid">
+          <div><span data-glyph="mute"></span>mute</div><div><span data-glyph="keypad"></span>keypad</div><div><span data-glyph="speaker"></span>audio</div>
+          <div><span data-glyph="plus"></span>add call</div><div><span data-glyph="video"></span>FaceTime</div><div><span data-glyph="person"></span>contacts</div>
+        </div>
+        <button class="endcall" id="endCall" data-glyph="endcall"></button>
+      </div>
+    </div>
+
+    <!-- ===== MESSAGES ===== -->
+    <div class="app" id="app-messages" data-statusdark="1">
+      <div id="msgList" style="display:flex;flex-direction:column;flex:1;overflow:hidden">
+        <div class="navbar"><span></span><button class="back" style="font-size:22px">✎</button></div>
+        <h1 class="large-title" style="padding-top:0">Messages</h1>
+        <div class="scroll" id="threads"></div>
+      </div>
+      <div id="msgThread" style="display:none;flex-direction:column;flex:1;overflow:hidden">
+        <div class="navbar" style="border-bottom:.5px solid var(--sep)">
+          <button class="back" id="threadBack">‹ Back</button>
+          <span class="ttl" id="threadName"></span>
+          <span style="width:50px"></span>
+        </div>
+        <div class="bubbles" id="bubbles"></div>
+        <div class="composer" id="composer"><input id="msgInput" placeholder="Text Message"><button id="msgSend">↑</button></div>
+      </div>
+    </div>
+
+    <!-- ===== CONTACTS ===== -->
+    <div class="app" id="app-contacts" data-statusdark="1">
+      <h1 class="large-title">Contacts</h1>
+      <div class="scroll"><div class="group" id="contactsList2"></div></div>
+    </div>
+
+    <!-- ===== PHOTOS ===== -->
+    <div class="app" id="app-photos" data-statusdark="1">
+      <h1 class="large-title">Library</h1>
+      <div class="scroll"><div class="photo-grid" id="photoGrid"></div></div>
+      <div class="viewer" id="viewer">
+        <div class="navbar"><button class="back" id="viewerBack">‹ Library</button><span></span></div>
+        <div class="big" id="viewerBig"></div>
+        <div class="cap" id="viewerCap"></div>
+      </div>
+    </div>
+
+    <!-- ===== CAMERA ===== -->
+    <div class="app dark" id="app-camera">
+      <div class="cam-view" id="camView"><span id="camMsg">Starting camera…</span><video id="camVideo" autoplay playsinline muted></video><div class="flash" id="flash"></div></div>
+      <div class="cam-bar"><button class="cam-thumb" id="camThumb"></button><button class="shutter" id="shutter"></button><span style="width:46px;color:#ff9f0a;text-align:center;font-size:13px">PHOTO</span></div>
+    </div>
+
+    <!-- ===== CALCULATOR ===== -->
+    <div class="app dark" id="app-calc">
+      <div class="calc-display" id="calcDisp">0</div>
+      <div class="calc-keys" id="calcKeys"></div>
+    </div>
+
+    <!-- ===== CLOCK ===== -->
+    <div class="app dark" id="app-clock">
+      <h1 class="large-title">World Clock</h1>
+      <div class="bigclock" id="bigClock"></div>
+      <div class="bigdate" id="bigDate"></div>
+      <div class="scroll" id="worldClocks"></div>
+    </div>
+
+    <!-- ===== NOTES ===== -->
+    <div class="app" id="app-notes" data-statusdark="1">
+      <div class="navbar"><span class="back" style="color:#e0a800">‹ Notes</span><span></span></div>
+      <textarea class="notes-area" id="notes" placeholder="Qor halkan…"></textarea>
+    </div>
+
+    <!-- ===== WEATHER ===== -->
+    <div class="app weather-app" id="app-weather">
+      <div class="scroll">
+        <div class="w-head"><div class="c">Muqdisho</div><div class="d">31°</div><div class="s">Qorrax badan</div><div>H:32°  L:25°</div></div>
+        <div class="w-card"><h4>Saacadaha</h4><div class="hours" id="hours"></div></div>
+        <div class="w-card"><h4>10-Day Forecast</h4><div class="days" id="days"></div></div>
+      </div>
+    </div>
+
+    <!-- ===== CALENDAR ===== -->
+    <div class="app" id="app-calendar" data-statusdark="1">
+      <h1 class="large-title" id="calTitle"></h1>
+      <div class="cal-grid" id="calGrid"></div>
+    </div>
+
+    <!-- ===== SETTINGS ===== -->
+    <div class="app" id="app-settings" data-statusdark="1">
+      <h1 class="large-title">Settings</h1>
+      <div class="scroll">
+        <div class="group"><div class="cell"><div class="avatar" style="width:58px;height:58px;font-size:22px">AA</div><div><div style="font-size:20px">Abdalla Ali</div><div style="font-size:13px;color:var(--muted)">615000001 · EVCPlus</div></div></div></div>
+        <div class="group">
+          <div class="cell"><span class="sq" style="background:#ff9500" data-glyph="airplane"></span>Airplane Mode<button class="toggle" id="tPlane"></button></div>
+          <div class="cell"><span class="sq" style="background:#007aff" data-glyph="wifi"></span>Wi-Fi<span class="sub">Hormuud-Home</span></div>
+          <div class="cell"><span class="sq" style="background:#34c759" data-glyph="cellular"></span>Mobile Service<span class="sub">Hormuud</span></div>
+        </div>
+        <div class="group">
+          <div class="cell"><span class="sq" style="background:#5856d6" data-glyph="moon"></span>Dark Mode<button class="toggle" id="tDark"></button></div>
+        </div>
+        <div class="section-h">Wallpaper</div>
+        <div class="group"><div class="wall-row" id="walls"></div></div>
+        <div class="group">
+          <div class="cell"><span class="sq" style="background:#8e8e93" data-glyph="info"></span>About<span class="sub">Demo phone · Student project</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTROL CENTER -->
+    <div id="ccHot" title="Control Center"></div>
+    <div class="cc" id="cc">
+      <div class="cc-grid">
+        <div class="cc-tile conn">
+          <button class="cc-round" id="ccPlane" data-glyph="airplane"></button>
+          <button class="cc-round on green" id="ccCell" data-glyph="cellular"></button>
+          <button class="cc-round on" id="ccWifi" data-glyph="wifi"></button>
+          <button class="cc-round on" id="ccBt" data-glyph="bluetooth"></button>
+        </div>
+        <div class="cc-tile music"><div style="font-size:13px;opacity:.7">Not Playing</div><div class="mctl"><span data-glyph="prev"></span><span data-glyph="play"></span><span data-glyph="next"></span></div></div>
+        <button class="cc-tile sq1" id="ccRot" data-glyph="rotlock"></button>
+        <button class="cc-tile sq1" id="ccDark" data-glyph="moon"></button>
+        <div class="cc-tile vslider" id="ccBright"><div class="fill"></div><span data-glyph="sun"></span></div>
+        <div class="cc-tile vslider" id="ccVol"><div class="fill" style="height:60%"></div><span data-glyph="speaker"></span></div>
+        <button class="cc-tile sq1" id="ccTorch" data-glyph="flashlight"></button>
+        <button class="cc-tile sq1" id="ccTimer" data-glyph="recents"></button>
+        <button class="cc-tile sq1" id="ccCalc" data-glyph="calcG"></button>
+        <button class="cc-tile sq1" id="ccCam" data-glyph="cameraG"></button>
+      </div>
+    </div>
+    <div id="dim"></div>
+
+    <!-- LOCK SCREEN -->
+    <div class="lock" id="lock">
+      <div class="lock-ic">🔒</div>
+      <div class="date" id="lockDate"></div>
+      <div class="time" id="lockTime"></div>
+      <div class="lock-notifs" id="lockNotifs"></div>
+      <div class="quick"><span data-glyph="flashlight" id="lockTorch"></span><span data-glyph="cameraG" id="lockCam"></span></div>
+      <div class="hint">Swipe up to open</div>
+    </div>
+
+    <!-- iOS ALERT (USSD) -->
+    <div class="alert-wrap" id="alertWrap">
+      <div class="alert">
+        <div class="alert-body">
+          <div class="spinner" id="aSpin" style="display:none"></div>
+          <div class="alert-text" id="aText"></div>
+          <input class="alert-input" id="aInput" autocomplete="off">
+        </div>
+        <div class="alert-btns"><button id="aCancel">Cancel</button><button id="aSend">Send</button></div>
+      </div>
+    </div>
+
+    <!-- NOTIFICATION -->
+    <div class="banner" id="banner">
+      <div class="ic i-msg" data-icon="messages" style="width:38px;height:38px"></div>
+      <div style="flex:1;min-width:0"><div class="b-top"><span id="bTitle"></span><small>now</small></div><div class="b-txt" id="bText"></div></div>
+    </div>
+
+    <div class="home-bar" id="homeBar"><i></i></div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const screen = $("screen");
+
+// ======================================================================
+//  iOS-STYLE ICONS (drawn as SVG)
+// ======================================================================
+const G = {  // SF-Symbol-like glyphs, 24x24
+  airplane: "M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5z",
+  wifi: "M12 18a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6zM12 4C7.4 4 3.3 5.8.4 8.8l1.9 1.9C4.7 8.2 8.2 6.7 12 6.7s7.3 1.5 9.7 4l1.9-1.9C20.7 5.8 16.6 4 12 4zm0 5.4c-3.1 0-5.9 1.2-7.9 3.3l1.9 1.9c1.5-1.6 3.6-2.5 6-2.5s4.5.9 6 2.5l1.9-1.9c-2-2.1-4.8-3.3-7.9-3.3zm0 5.3c-1.7 0-3.2.7-4.2 1.8l1.9 1.9c.6-.6 1.4-1 2.3-1s1.7.4 2.3 1l1.9-1.9c-1-1.1-2.5-1.8-4.2-1.8z",
+  cellular: "M2 17h3v4H2zm5-4h3v8H7zm5-4h3v12h-3zm5-5h3v17h-3z",
+  bluetooth: "M17.7 7.7 12 2h-1v7.6L6.4 5 5 6.4l5.6 5.6L5 17.6 6.4 19l4.6-4.6V22h1l5.7-5.7-4.3-4.3 4.3-4.3zM13 5.8l1.9 1.9L13 9.6V5.8zm1.9 10.5L13 18.2v-3.8l1.9 1.9z",
+  moon: "M12.3 22c5.5 0 10-4.5 10-10 0-.5 0-.9-.1-1.4A7 7 0 0 1 12.9 1.8C7.1 1.6 2.3 6.2 2.3 12s4.5 10 10 10z",
+  sun: "M12 7a5 5 0 1 0 0 10 5 5 0 0 0 0-10zM11 1h2v3h-2zm0 19h2v3h-2zM1 11h3v2H1zm19 0h3v2h-3zM4.2 5.6l1.4-1.4 2.1 2.1-1.4 1.4zm12.1 12.1 1.4-1.4 2.1 2.1-1.4 1.4zM4.2 18.4l2.1-2.1 1.4 1.4-2.1 2.1zM16.3 6.3l2.1-2.1 1.4 1.4-2.1 2.1z",
+  flashlight: "M7 2h10v3l-2.5 4.5V22h-5V9.5L7 5V2zm5 9a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3z",
+  cameraG: "M9 3 7.2 5H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-3.2L15 3H9zm3 5a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6z",
+  info: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z",
+  mute: "M19 11h-1.7c0 .74-.16 1.43-.43 2.05l1.23 1.23c.56-.98.9-2.09.9-3.28zm-4 .17V5a3 3 0 0 0-6 0v.18zM4.27 3 3 4.27l6 6V11a3 3 0 0 0 3.65 2.92l1.66 1.66A5.3 5.3 0 0 1 6.7 11H5c0 3.41 2.72 6.23 6 6.72V21h2v-3.28a6.9 6.9 0 0 0 2.54-.9L19.73 21 21 19.73z",
+  speaker: "M3 9v6h4l5 5V4L7 9H3zm13.5 3A4.5 4.5 0 0 0 14 8v8a4.5 4.5 0 0 0 2.5-4zM14 3.2v2.1a7 7 0 0 1 0 13.4v2.1a9 9 0 0 0 0-17.6z",
+  plus: "M11 4h2v7h7v2h-7v7h-2v-7H4v-2h7z",
+  video: "M17 10.5V7a1 1 0 0 0-1-1H4a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-3.5l4 4v-11l-4 4z",
+  person: "M12 12a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zm0 2c-3 0-9 1.5-9 4.5V21h18v-2.5c0-3-6-4.5-9-4.5z",
+  personCircle: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 3.5a3.5 3.5 0 1 1 0 7 3.5 3.5 0 0 1 0-7zm0 14.7a8 8 0 0 1-6-2.8c.5-2 4-3 6-3s5.5 1 6 3a8 8 0 0 1-6 2.8z",
+  recents: "M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm.6-13H11v6.2l5.1 3.1.8-1.3-4.3-2.6z",
+  endcall: "M12 9c-1.6 0-3.2.25-4.6.72v3.1c0 .4-.23.74-.56.9-.98.49-1.87 1.12-2.66 1.85-.18.18-.43.28-.7.28-.28 0-.53-.11-.71-.29L.29 13.08A.96.96 0 0 1 0 12.37c0-.28.11-.53.29-.71C3.34 8.78 7.46 7 12 7s8.66 1.78 11.71 4.67c.18.18.29.43.29.71 0 .28-.11.53-.29.71l-2.48 2.48c-.18.18-.43.29-.71.29-.27 0-.52-.11-.7-.28a11.3 11.3 0 0 0-2.67-1.85.99.99 0 0 1-.56-.9v-3.1C15.2 9.25 13.6 9 12 9z",
+  play: "M8 5v14l11-7z",
+  prev: "M6 6h2v12H6zm3.5 6 8.5 6V6z",
+  next: "M16 6h2v12h-2zM6 18l8.5-6L6 6z",
+  rotlock: "M12 4a8 8 0 0 0-7.6 5.5l1.9.6A6 6 0 0 1 17.7 10H15l3.5 4 3.5-4h-2.3A8 8 0 0 0 12 4zM9 12v-1a3 3 0 0 1 6 0v1h1v6H8v-6h1zm2 0h2v-1a1 1 0 0 0-2 0v1z",
+  calcG: "M5 2h14a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm1 3v4h12V5H6zm0 6v2h2v-2H6zm5 0v2h2v-2h-2zm5 0v2h2v-2h-2zM6 15v2h2v-2H6zm5 0v2h2v-2h-2zm5 0v5h2v-5h-2zM6 19v1h2v-1H6zm5 0v1h2v-1h-2z"
+};
+function glyph(name, size = 22) {
+  if (name === "keypad") {
+    let c = ""; for (let r = 0; r < 4; r++) for (let k = 0; k < 3; k++) c += `<circle cx="${6 + k * 6}" cy="${3 + r * 6}" r="2.2"/>`;
+    return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="currentColor">${c}</svg>`;
+  }
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="currentColor"><path d="${G[name]}"/></svg>`;
+}
+const PHOTO_COLORS = ["#f9a11b", "#fbd800", "#9bd23c", "#36c6a3", "#2c9ce0", "#7b61c9", "#d84b9a", "#f0533d"];
+const ICONS = {
+  phone: `<svg viewBox="0 0 24 24" width="36" height="36" fill="#fff"><path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1C10.6 21 3 13.4 3 4c0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1z"/></svg>`,
+  messages: `<svg viewBox="0 0 24 24" width="40" height="40" fill="#fff"><path d="M12 3.5C6.5 3.5 2 7.1 2 11.5c0 2.5 1.4 4.7 3.6 6.2-.2 1.3-.9 2.5-1.9 3.4 2 0 3.8-.7 5.1-1.8 1 .2 2.1.3 3.2.3 5.5 0 10-3.6 10-8s-4.5-8.1-10-8.1z"/></svg>`,
+  photos: `<svg viewBox="0 0 60 60" width="62" height="62">${PHOTO_COLORS.map((c, i) => `<ellipse cx="30" cy="18" rx="7.2" ry="11.5" fill="${c}" opacity=".82" transform="rotate(${i * 45} 30 30)" style="mix-blend-mode:multiply"/>`).join("")}</svg>`,
+  camera: `<svg viewBox="0 0 60 60" width="62" height="62"><rect x="8" y="18" width="44" height="28" rx="6" fill="#3a3a3c"/><rect x="23" y="13.5" width="14" height="6" rx="2" fill="#3a3a3c"/><circle cx="30" cy="32" r="10.5" fill="#d1d1d6"/><circle cx="30" cy="32" r="7.5" fill="#1c1c1e"/><circle cx="27.5" cy="29.5" r="2" fill="#636366"/><circle cx="45" cy="23.5" r="1.8" fill="#ffd60a"/></svg>`,
+  calc: (() => {
+    let c = "";
+    for (let r = 0; r < 4; r++) for (let k = 0; k < 4; k++) {
+      const col = k === 3 ? "#ff9f0a" : r === 0 ? "#a5a5a5" : "#5a5a5e";
+      c += `<circle cx="${15 + k * 10}" cy="${15 + r * 10}" r="4.2" fill="${col}"/>`;
+    }
+    return `<svg viewBox="0 0 60 60" width="62" height="62">${c}</svg>`;
+  })(),
+  clock: (() => {
+    let t = "";
+    for (let i = 0; i < 12; i++) t += `<line x1="30" y1="7.5" x2="30" y2="10.5" stroke="#000" stroke-width="1.6" transform="rotate(${i * 30} 30 30)"/>`;
+    return `<svg viewBox="0 0 60 60" width="62" height="62"><circle cx="30" cy="30" r="26" fill="#fff"/>${t}
+      <line class="ck-h" x1="30" y1="30" x2="30" y2="18" stroke="#000" stroke-width="3" stroke-linecap="round"/>
+      <line class="ck-m" x1="30" y1="30" x2="30" y2="11" stroke="#000" stroke-width="2.2" stroke-linecap="round"/>
+      <line class="ck-s" x1="30" y1="34" x2="30" y2="9" stroke="#ff9500" stroke-width="1"/>
+      <circle cx="30" cy="30" r="1.8" fill="#ff9500"/></svg>`;
+  })(),
+  notes: `<svg viewBox="0 0 60 60" width="62" height="62"><rect width="60" height="60" fill="#fff"/><rect width="60" height="17" fill="#fbcf3f"/><line x1="0" y1="17.5" x2="60" y2="17.5" stroke="#d9a90a" stroke-width="1" stroke-dasharray="1.5 1.5"/><line x1="8" y1="29" x2="60" y2="29" stroke="#d1d1d6"/><line x1="8" y1="39" x2="60" y2="39" stroke="#d1d1d6"/><line x1="8" y1="49" x2="60" y2="49" stroke="#d1d1d6"/></svg>`,
+  weather: `<svg viewBox="0 0 60 60" width="56" height="56"><circle cx="23" cy="23" r="10" fill="#ffd60a"/><path d="M19 45h23a8.5 8.5 0 0 0 .8-17A11.5 11.5 0 0 0 21 31.2 7 7 0 0 0 19 45z" fill="#fff"/></svg>`,
+  settings: `<svg viewBox="0 0 60 60" width="58" height="58"><circle cx="30" cy="30" r="19" fill="#48484a" stroke="#48484a" stroke-width="8" stroke-dasharray="4.1 3.36"/><circle cx="30" cy="30" r="14" fill="#c7c7cc"/><circle cx="30" cy="30" r="10.5" fill="#8e8e93"/><g stroke="#c7c7cc" stroke-width="2.4">${[0, 60, 120].map(a => `<line x1="30" y1="20" x2="30" y2="40" transform="rotate(${a} 30 30)"/>`).join("")}</g><circle cx="30" cy="30" r="4" fill="#48484a"/></svg>`,
+  contacts: `<svg viewBox="0 0 60 60" width="62" height="62"><circle cx="30" cy="24" r="10" fill="#8e8e93"/><path d="M11 52c1.5-10 9.5-15 19-15s17.5 5 19 15z" fill="#8e8e93"/></svg>`
+};
+document.querySelectorAll("[data-icon]").forEach(el => el.innerHTML = ICONS[el.dataset.icon]);
+document.querySelectorAll("[data-glyph]").forEach(el => {
+  const big = el.closest(".callgrid") || el.classList.contains("endcall") || el.closest(".cc-round") || el.classList.contains("cc-round");
+  const size = el.classList.contains("endcall") ? 38 : el.closest(".callgrid") ? 32 : el.classList.contains("sq") ? 19 : el.closest(".tabbar") ? 25 : big ? 26 : 26;
+  el.innerHTML = glyph(el.dataset.glyph, size);
+});
+function updateClockIcon(d) {
+  const s = d.getSeconds(), m = d.getMinutes() + s / 60, h = (d.getHours() % 12) + m / 60;
+  document.querySelectorAll(".ck-h").forEach(e => e.setAttribute("transform", `rotate(${h * 30} 30 30)`));
+  document.querySelectorAll(".ck-m").forEach(e => e.setAttribute("transform", `rotate(${m * 6} 30 30)`));
+  document.querySelectorAll(".ck-s").forEach(e => e.setAttribute("transform", `rotate(${s * 6} 30 30)`));
+}
+
+// ======================================================================
+//  PHONE SYSTEM: lock, home, apps, clock
+// ======================================================================
+const WALLS = [
+  "linear-gradient(160deg,#1e3c72 0%,#6a3093 55%,#f29492 100%)",
+  "linear-gradient(160deg,#0f2027,#203a43,#2c5364)",
+  "linear-gradient(160deg,#ff9966,#ff5e62 50%,#5f2c82)",
+  "linear-gradient(160deg,#11998e,#38ef7d)",
+  "linear-gradient(160deg,#141e30,#243b55)"
+];
+let wallIdx = 0;
+function setWall(i) { wallIdx = i; screen.style.setProperty("--wall", WALLS[i]); renderWalls(); }
+
+let currentApp = null;
+let locked = true;
+let airplane = false;
+
+function tick() {
+  const d = new Date();
+  const hm = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }).replace(/\s?[AP]M/, "");
+  $("sTime").textContent = hm;
+  $("lockTime").textContent = hm;
+  $("lockDate").textContent = d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
+  $("calDay").textContent = d.toLocaleDateString("en-US", { weekday: "short" }).toUpperCase();
+  $("calNum").textContent = d.getDate();
+  updateClockIcon(d);
+  if (currentApp === "clock") renderClock();
+}
+setInterval(tick, 1000);
+
+function updateChrome() {
+  const appEl = currentApp ? $("app-" + currentApp) : null;
+  const darkText = !locked && appEl && appEl.dataset.statusdark === "1";
+  $("status").classList.toggle("dark-text", !!darkText);
+  $("homeBar").classList.toggle("dark-bar", !!darkText);
+  $("home").classList.toggle("behind", !!currentApp);
+}
+
+function unlock() { locked = false; $("lock").classList.add("hidden"); $("lockNotifs").innerHTML = ""; updateChrome(); }
+function lockPhone() {
+  closeCC();
+  if (currentApp) closeApp();
+  closeAlert();
+  locked = true; $("lock").classList.remove("hidden"); updateChrome();
+}
+$("power").onclick = () => locked ? unlock() : lockPhone();
+
+// swipe up / click to unlock
+let swipeY = null;
+$("lock").addEventListener("pointerdown", e => { swipeY = e.clientY; });
+$("lock").addEventListener("pointerup", e => { if (swipeY !== null && swipeY - e.clientY > -5) unlock(); swipeY = null; });
+
+let zoomLevel = 1;
+let lastOrigin = "50% 50%";
+function originFrom(el) {
+  if (!el) return "50% 50%";
+  const r = el.getBoundingClientRect(), sr = screen.getBoundingClientRect();
+  const z = sr.width / screen.offsetWidth || 1;
+  return `${(r.left + r.width / 2 - sr.left) / z}px ${(r.top + r.height / 2 - sr.top) / z}px`;
+}
+function openApp(id, srcEl) {
+  if (locked) return;
+  closeCC();
+  if (id === "evc") { openApp("phone", srcEl); phoneTab("keypad"); dialNumber = "*770#"; renderDial(); return; }
+  if (currentApp && currentApp !== id) $("app-" + currentApp).classList.remove("active", "closing");
+  currentApp = id;
+  const appEl = $("app-" + id);
+  lastOrigin = originFrom(srcEl);
+  appEl.style.transformOrigin = lastOrigin;
+  appEl.classList.remove("closing");
+  appEl.classList.add("active");
+  if (APPS[id] && APPS[id].open) APPS[id].open();
+  updateChrome();
+}
+function closeApp() {
+  if (!currentApp) return;
+  if (APPS[currentApp] && APPS[currentApp].close) APPS[currentApp].close();
+  const el = $("app-" + currentApp);
+  el.classList.add("closing");
+  el.addEventListener("animationend", function done(e) {
+    if (e.target !== el) return;
+    el.removeEventListener("animationend", done);
+    if (el.classList.contains("closing")) el.classList.remove("active", "closing");
+  });
+  currentApp = null;
+  updateChrome();
+}
+document.querySelectorAll("[data-app]").forEach(b => b.onclick = () => openApp(b.dataset.app, b.querySelector(".ic") || b));
+$("homeBar").onclick = () => {
+  if (alertOpen) return;
+  if ($("cc").classList.contains("on")) return closeCC();
+  if (!locked) closeApp(); else unlock();
+};
+
+// notification banner
+let bannerTimer;
+function notify(title, text, onTap) {
+  if (locked) {
+    const n = document.createElement("div");
+    n.className = "lock-notif";
+    n.innerHTML = `<b></b><span></span>`;
+    n.querySelector("b").textContent = "💬 " + title;
+    n.querySelector("span").textContent = text;
+    $("lockNotifs").prepend(n);
+    return;
+  }
+  $("bTitle").textContent = title;
+  $("bText").textContent = text;
+  $("banner").classList.add("on");
+  $("banner").onclick = () => { $("banner").classList.remove("on"); onTap && onTap(); };
+  clearTimeout(bannerTimer);
+  bannerTimer = setTimeout(() => $("banner").classList.remove("on"), 4500);
+}
+
+// ======================================================================
+//  CONTACTS + PHONE APP
+// ======================================================================
+const contacts = [
+  { name: "Hooyo", num: "615111222" },
+  { name: "Aabe", num: "615333444" },
+  { name: "Hodan Mohamed", num: "615000002" },
+  { name: "Ahmed Yusuf", num: "771234567" },
+  { name: "Fadumo Ali", num: "775000004" },
+  { name: "Hormuud Customer Care", num: "300" }
+];
+const recents = [];
+const initials = n => n.split(" ").map(w => w[0]).slice(0, 2).join("").toUpperCase();
+const contactByNum = n => contacts.find(c => c.num === n);
+
+function renderContacts() {
+  ["contactsList", "contactsList2"].forEach(listId => {
+    const el = $(listId); el.innerHTML = "";
+    contacts.forEach(c => {
+      const b = document.createElement("button");
+      b.className = "cell";
+      b.innerHTML = `<div class="avatar">${initials(c.name)}</div><div><div></div><div style="font-size:13px;color:var(--muted)">${c.num}</div></div>`;
+      b.querySelector("div > div").textContent = c.name;
+      b.onclick = () => { openApp("phone"); phoneTab("keypad"); dialNumber = c.num; renderDial(); };
+      el.appendChild(b);
+    });
+  });
+}
+function renderRecents() {
+  const el = $("recentsList"); el.innerHTML = "";
+  if (!recents.length) { el.innerHTML = `<div class="cell" style="color:var(--muted)">No recent calls</div>`; return; }
+  recents.forEach(r => {
+    const b = document.createElement("button");
+    b.className = "cell";
+    b.innerHTML = `<div><div></div><div style="font-size:13px;color:var(--muted)">${r.kind}</div></div><span class="sub">${r.time}</span>`;
+    b.querySelector("div > div").textContent = r.label;
+    b.onclick = () => { phoneTab("keypad"); dialNumber = r.num; renderDial(); };
+    el.appendChild(b);
+  });
+}
+function addRecent(num, kind) {
+  const c = contactByNum(num);
+  recents.unshift({ num, label: c ? c.name : num, kind, time: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) });
+}
+
+function phoneTab(pg) {
+  document.querySelectorAll(".phone-page").forEach(p => p.classList.toggle("on", p.id === "pg-" + pg));
+  document.querySelectorAll("#phoneTabs button").forEach(b => b.classList.toggle("on", b.dataset.pg === pg));
+  if (pg === "recents") renderRecents();
+}
+document.querySelectorAll("#phoneTabs button").forEach(b => b.onclick = () => phoneTab(b.dataset.pg));
+
+let dialNumber = "";
+const KEYS = [["1",""],["2","ABC"],["3","DEF"],["4","GHI"],["5","JKL"],["6","MNO"],["7","PQRS"],["8","TUV"],["9","WXYZ"],["*",""],["0","+"],["#",""]];
+KEYS.forEach(([d, l]) => {
+  const b = document.createElement("button");
+  b.className = "k"; b.innerHTML = `<b>${d}</b><small>${l}</small>`;
+  b.onclick = () => pressKey(d);
+  $("keys").appendChild(b);
+});
+function pressKey(d) { if (dialNumber.length < 20) { dialNumber += d; renderDial(); } }
+function renderDial() {
+  $("dialNum").textContent = dialNumber;
+  $("dialNum").style.fontSize = dialNumber.length > 12 ? "28px" : "38px";
+  const c = contactByNum(dialNumber);
+  $("dialName").textContent = c ? c.name : (dialNumber && !/[*#]/.test(dialNumber) ? "Add Number" : "");
+  $("delBtn").style.visibility = dialNumber ? "visible" : "hidden";
+}
+$("delBtn").onclick = () => { dialNumber = dialNumber.slice(0, -1); renderDial(); };
+$("callBtn").onclick = placeCall;
+
+let callTimer, callSecs = 0;
+function placeCall() {
+  if (!dialNumber) { if (recents[0]) { dialNumber = recents[0].num; renderDial(); } return; }
+  if (airplane) { return systemAlert("Airplane Mode", "Turn off Airplane Mode to make a call."); }
+  const num = dialNumber;
+  if (num.startsWith("*") || num.startsWith("#")) {
+    addRecent(num, "USSD");
+    if (num === "*770#") { startUssd(); }
+    else { loading(() => endSession("Connection problem or invalid MMI code.")); }
+    return;
+  }
+  addRecent(num, "Outgoing");
+  const c = contactByNum(num);
+  $("callName").textContent = c ? c.name : num;
+  $("callState").textContent = "calling…";
+  $("callscreen").classList.add("on");
+  $("status").classList.remove("dark-text");
+  callSecs = 0;
+  clearInterval(callTimer);
+  setTimeout(() => {
+    if (!$("callscreen").classList.contains("on")) return;
+    callTimer = setInterval(() => {
+      callSecs++;
+      $("callState").textContent = String(Math.floor(callSecs / 60)).padStart(2, "0") + ":" + String(callSecs % 60).padStart(2, "0");
+    }, 1000);
+  }, 2500);
+}
+$("endCall").onclick = () => { clearInterval(callTimer); $("callState").textContent = "Call Ended"; setTimeout(() => { $("callscreen").classList.remove("on"); updateChrome(); }, 600); };
+
+// ======================================================================
+//  iOS ALERT used for USSD
+// ======================================================================
+let alertOpen = false, alertHandler = null, loadTimer = null;
+function showAlert({ text, input = false, password = false, buttons }) {
+  alertOpen = true;
+  $("alertWrap").classList.add("on");
+  $("aSpin").style.display = "none";
+  $("aText").textContent = text;
+  $("aInput").style.display = input ? "block" : "none";
+  $("aInput").type = password ? "password" : "text";
+  $("aInput").inputMode = "numeric";
+  $("aInput").value = "";
+  const [cancelLbl, okLbl] = buttons;
+  $("aCancel").style.display = cancelLbl ? "block" : "none";
+  $("aCancel").textContent = cancelLbl || "";
+  $("aSend").style.display = okLbl ? "block" : "none";
+  $("aSend").textContent = okLbl || "";
+  if (input) setTimeout(() => $("aInput").focus(), 30);
+}
+function closeAlert() { alertOpen = false; clearTimeout(loadTimer); $("alertWrap").classList.remove("on"); alertHandler = null; }
+function loading(then) {
+  showAlert({ text: "Running USSD Code…", buttons: ["Cancel", null] });
+  $("aSpin").style.display = "block";
+  alertHandler = null;
+  loadTimer = setTimeout(then, 700);
+}
+function systemAlert(title, text) {
+  showAlert({ text: title + "\n" + text, buttons: [null, "OK"] });
+  alertHandler = closeAlert;
+}
+$("aSend").onclick = () => { if (alertHandler) alertHandler($("aInput").value.trim()); };
+$("aCancel").onclick = () => { closeAlert(); dialNumber = ""; renderDial(); };
+
+// USSD screen helpers
+function ask(text, onInput, opts = {}) {
+  showAlert({ text, input: true, password: !!opts.password, buttons: ["Cancel", "Send"] });
+  alertHandler = v => loading(() => onInput(v));
+}
+function msg(text, next) {
+  showAlert({ text, buttons: [null, "OK"] });
+  alertHandler = () => loading(next);
+}
+function endSession(text) {
+  showAlert({ text, buttons: [null, "Dismiss"] });
+  alertHandler = () => { closeAlert(); dialNumber = ""; renderDial(); };
+}
+
+// ======================================================================
+//  EVCPLUS  (same logic as EvcPlus.java)
+// ======================================================================
+const S = {
+  name: "Abdalla Ali", myNumber: "615000001", pin: 1234,
+  balance: 1000.00, bankBalance: 500.00, bankAccount: "SB-20231234",
+  hormuudBill: 12.50, language: "Somali", maxAttempts: 3, attempts: 0,
+  maxTransfer: 1000.00, txId: 1000, locked: false,
+  last: [], lastTransfer: "", lastTransferAmount: 0, lastTransferNumber: ""
+};
+const money = v => "$" + v.toFixed(2);
+const validNumber = n => /^(61|77)\d{7}$/.test(n);
+const back = () => mainMenu();
+
+// success: save to history + EVCPlus SMS + show result
+function success(text, logLine, finish) {
+  S.last.unshift(logLine); S.last = S.last.slice(0, 3);
+  setTimeout(() => receiveSms("EVCPlus", text), 1500);
+  if (finish) endSession(text); else msg(text, back);
+}
+
+function startUssd() {
+  if (S.locked) return loading(() => endSession("[-EVCPlus-]\nAkoonkaaga waa xiran yahay. Wac 300."));
+  loading(pinScreen);
+}
+function pinScreen() {
+  ask("[-EVCPlus-]\nFadlan geli PIN-kaaga:", v => {
+    if (v !== "" && Number(v) === S.pin) { S.attempts = 0; return mainMenu(); }
+    S.attempts++;
+    if (S.attempts >= S.maxAttempts) {
+      S.locked = true;
+      endSession("PIN-ka waxaad khaldday 3 jeer. Akoonkaaga waa la xiray. Wac 300.");
+    } else {
+      msg("PIN-ka aad gelisay waa khalad. Isku dayo haray: " + (S.maxAttempts - S.attempts), pinScreen);
+    }
+  }, { password: true });
+}
+function confirmBox(text, yes) {
+  ask(text + "\n1. Haa\n2. Maya", v => v === "1" ? yes() : msg("Waa la joojiyay.", back));
+}
+function askPin(onOk) {
+  ask("Geli PIN-kaaga:", v => (v !== "" && Number(v) === S.pin) ? onOk() : msg("PIN khaldan. Waa la joojiyay.", back), { password: true });
+}
+function askAmount(onOk, limit) {
+  ask("Geli lacagta:", v => {
+    const a = Math.round(parseFloat(v) * 100) / 100;
+    if (!(a > 0)) return msg("Lacagta aad gelisay waa khalad.", back);
+    if (a > S.maxTransfer) return msg("Xadka ugu badan ee hal mar waa " + money(S.maxTransfer), back);
+    if (a > (limit ?? S.balance)) return msg("[-EVCPlus-] Haraagaagu kuma filna.", back);
+    onOk(a);
+  });
+}
+
+function mainMenu() {
+  const so = "[-EVCPlus-]\n1. Itus Haraagaaga\n2. Kaarka Hadalka\n3. Bixi Biil\n4. U wareeji EVCPlus\n5. Warbixin Kooban\n6. Salaam Bank\n7. Maareynta\n8. Bill Payment";
+  const en = "[-EVCPlus-]\n1. Check Balance\n2. Airtime\n3. Pay Bill\n4. Transfer EVCPlus\n5. Mini Statement\n6. Salaam Bank\n7. Management\n8. Bill Payment";
+  ask(S.language === "Somali" ? so : en, v => {
+    switch (v) {
+      case "1": return endSession("[-EVCPlus-] Haraagaagu waa " + money(S.balance));
+      case "2": return airtime();
+      case "3": return payBill();
+      case "4": return transfer();
+      case "5": return statement();
+      case "6": return salaamBank();
+      case "7": return management();
+      case "8": return billPayment();
+      default:  return msg("Doorasho khaldan.", back);
+    }
+  });
+}
+
+// ----- 2. Kaarka Hadalka -----
+function airtime() {
+  ask("Kaarka Hadalka\n1. Ugu shub naftaada\n2. Ugu shub qof kale\n3. Xirmooyinka Internetka\n0. Dib u noqo", v => {
+    const buy = (target, amount, item) => {
+      if (amount > S.balance) return msg("[-EVCPlus-] Haraagaagu kuma filna.", back);
+      confirmBox(`Ma hubtaa inaad ${money(amount)} ${item} ugu shubto ${target}?`, () => {
+        S.balance -= amount; S.txId++;
+        success(`[-EVCPlus-] ${money(amount)} ${item} ayaad ugu shubtay ${target}, Tix: ${S.txId}, Haraagaagu waa ${money(S.balance)}`,
+                `Tix:${S.txId}  ${item}  -${money(amount)}  ${target}`);
+      });
+    };
+    if (v === "0") return mainMenu();
+    if (v === "1") return askAmount(a => buy(S.myNumber, a, "Airtime"));
+    if (v === "2") return ask("Geli lambarka:", n => {
+      if (!validNumber(n)) return msg("Lambarka aad gelisay waa khalad.", back);
+      askAmount(a => buy(n, a, "Airtime"));
+    });
+    if (v === "3") return ask("Xirmooyinka Internetka\n1. 1GB - $1 (1 maalin)\n2. 5GB - $5 (7 maalmood)\n3. 20GB - $15 (30 maalmood)\n4. Unlimited - $30 (30 maalmood)", p => {
+      const packs = { "1": [1, "Internet 1GB"], "2": [5, "Internet 5GB"], "3": [15, "Internet 20GB"], "4": [30, "Internet Unlimited"] };
+      if (!packs[p]) return msg("Doorasho khaldan.", back);
+      buy(S.myNumber, packs[p][0], packs[p][1]);
+    });
+    msg("Doorasho khaldan.", back);
+  });
+}
+
+// ----- 3. Bixi Biil -----
+function payBill() {
+  ask("Bixi Biil\n1. Ka iibso (Merchant)\n2. Bixi biilka Hormuud (Postpaid)\n0. Dib u noqo", v => {
+    if (v === "0") return mainMenu();
+    if (v === "1") return ask("Geli Merchant Number-ka:", id => {
+      const merchants = { "400100": "HAYAT MARKET", "400200": "BAKAARO SHOP", "400300": "JUBA HOTEL" };
+      const m = merchants[id];
+      if (!m) return msg("Merchant-kan lama helin.", back);
+      askAmount(a => confirmBox(`Ma hubtaa inaad ${money(a)} u bixiso ${m} (${id})?`, () => askPin(() => {
+        S.balance -= a; S.txId++;
+        success(`[-EVCPlus-] ${money(a)} ayaad u bixisay ${m}, Tix: ${S.txId}, Haraagaagu waa ${money(S.balance)}`,
+                `Tix:${S.txId}  Merchant  -${money(a)}  ${m}`);
+      })));
+    });
+    if (v === "2") {
+      if (S.hormuudBill === 0) return msg("[-EVCPlus-] Biil lagaa rabo ma jiro.", back);
+      if (S.hormuudBill > S.balance) return msg(`Biilkaagu waa ${money(S.hormuudBill)}. Haraagaagu kuma filna.`, back);
+      return ask(`Biilka Hormuud ee lagaa rabo waa ${money(S.hormuudBill)}\n1. Bixi\n2. Maya`, c => {
+        if (c !== "1") return msg("Waa la joojiyay.", back);
+        askPin(() => {
+          const paid = S.hormuudBill;
+          S.balance -= paid; S.hormuudBill = 0; S.txId++;
+          success(`[-EVCPlus-] ${money(paid)} ayaad ku bixisay biilka Hormuud, Tix: ${S.txId}, Haraagaagu waa ${money(S.balance)}`,
+                  `Tix:${S.txId}  Hormuud Bill  -${money(paid)}`);
+        });
+      });
+    }
+    msg("Doorasho khaldan.", back);
+  });
+}
+
+// ----- 4. U wareeji EVCPlus: number -> amount -> confirm -> PIN -> success (session ends) -----
+function transfer() {
+  ask("Geli lambarka aad u wareejinayso:", n => {
+    if (n === S.myNumber) return msg("Naftaada lacag uma wareejin kartid.", back);
+    if (!validNumber(n)) return msg("Lambarka aad gelisay waa khalad. (9 lambar, ku bilaabma 61 ama 77)", back);
+    askAmount(a => {
+      confirmBox(`Lambarka: ${n}\nLacagta: ${money(a)}\nMa hubtaa inaad lacag u wareejiso lambarkan?`, () => askPin(() => {
+        S.balance -= a; S.txId++;
+        S.lastTransfer = `Tix:${S.txId}  -${money(a)}  -> ${n}`;
+        S.lastTransferAmount = a; S.lastTransferNumber = n;
+        success(`[-EVCPlus-] ${money(a)} ayaad u wareejisay ${n}, Tix: ${S.txId}, Haraagaagu waa ${money(S.balance)}`,
+                `Tix:${S.txId}  Wareejin  -${money(a)}  ${n}`, true);
+      }));
+    });
+  });
+}
+
+// ----- 5. Warbixin Kooban -----
+function statement() {
+  ask("Warbixin Kooban\n1. Dhaqdhaqaaqii u dambeeyay\n2. Wareejintii u dambeysay\n3. Saddexdii dhaqdhaqaaq ee u dambeeyay\n0. Dib u noqo", v => {
+    if (v === "0") return mainMenu();
+    if (v === "1") return msg(S.last.length ? "[-EVCPlus-] " + S.last[0] : "Wax dhaqdhaqaaq ah ma jiraan.", back);
+    if (v === "2") return msg(S.lastTransfer ? "[-EVCPlus-] " + S.lastTransfer : "Wax wareejin ah ma jiraan.", back);
+    if (v === "3") {
+      let text = "";
+      for (let i = 0; i < S.last.length; i++) text += (i + 1) + ". " + S.last[i] + "\n";
+      return msg((text || "Wax dhaqdhaqaaq ah ma jiraan.\n") + "Haraaga: " + money(S.balance), back);
+    }
+    msg("Doorasho khaldan.", back);
+  });
+}
+
+// ----- 6. Salaam Bank -----
+function salaamBank() {
+  ask("Salaam Bank\n1. Itus haraaga bangiga\n2. Lacag dhigasho (EVCPlus -> Bank)\n3. Lacag la bixid (Bank -> EVCPlus)\n0. Dib u noqo", v => {
+    if (v === "0") return mainMenu();
+    if (v === "1") return msg(`[Salaam Bank] Akoon: ${S.bankAccount}, Haraagaagu waa ${money(S.bankBalance)}`, back);
+    if (v === "2" || v === "3") {
+      const toBank = v === "2";
+      return askAmount(a => askPin(() => {
+        S.txId++;
+        if (toBank) { S.balance -= a; S.bankBalance += a; }
+        else        { S.bankBalance -= a; S.balance += a; }
+        success(`[Salaam Bank] ${money(a)} ayaad ${toBank ? "dhigatay akoonka" : "ka soo bixisay akoonka"} ${S.bankAccount}, Tix: ${S.txId}. EVCPlus: ${money(S.balance)}, Bank: ${money(S.bankBalance)}`,
+                `Tix:${S.txId}  ${toBank ? "To Bank  -" : "From Bank  +"}${money(a)}`);
+      }), toBank ? S.balance : S.bankBalance);
+    }
+    msg("Doorasho khaldan.", back);
+  });
+}
+
+// ----- 7. Maareynta -----
+function management() {
+  ask("Maareynta\n1. Bedel PIN-ka\n2. Bedel Luuqadda\n3. Wargeli Mobile Lumay\n4. Lacag celin (Wareejintii u dambeysay)\n0. Dib u noqo", v => {
+    if (v === "0") return mainMenu();
+    if (v === "1") return ask("Geli PIN-ka hadda:", oldP => {
+      if (oldP === "" || Number(oldP) !== S.pin) return msg("PIN khaldan.", back);
+      ask("Geli PIN cusub (4 lambar):", np => ask("Mar kale geli PIN cusub:", cp => {
+        if (!/^\d{4}$/.test(np) || Number(np) < 1000) return msg("PIN-ku waa inuu noqdaa 4 lambar.", back);
+        if (np !== cp) return msg("PIN-yadu isma laha.", back);
+        if (Number(np) === S.pin) return msg("PIN cusub waa inuu ka duwanaadaa kii hore.", back);
+        S.pin = Number(np);
+        msg("[-EVCPlus-] PIN-kaaga si guul ah ayaa loo bedelay.", back);
+      }, { password: true }), { password: true });
+    }, { password: true });
+    if (v === "2") return ask("1. Somali\n2. English", l => {
+      if (l === "1") { S.language = "Somali"; return msg("Luuqadda waa Somali.", back); }
+      if (l === "2") { S.language = "English"; return msg("Language changed to English.", back); }
+      msg("Doorasho khaldan.", back);
+    });
+    if (v === "3") return confirmBox("Ma hubtaa in mobile-kaagu lumay? Akoonka waa la xiri doonaa.", () => {
+      S.locked = true; endSession("[-EVCPlus-] Akoonkaaga waa la xiray. Wac 300 si laguu furo.");
+    });
+    if (v === "4") {
+      if (S.lastTransferAmount === 0) return msg("Ma jirto wareejin la celin karo.", back);
+      return confirmBox(`Ma rabtaa inaad dib u celiso ${money(S.lastTransferAmount)} oo aad u dirtay ${S.lastTransferNumber}?`, () => askPin(() => {
+        const amt = S.lastTransferAmount;
+        S.balance += amt; S.txId++; S.lastTransferAmount = 0;
+        success(`[-EVCPlus-] ${money(amt)} waa lagugu soo celiyay, Tix: ${S.txId}, Haraagaagu waa ${money(S.balance)}`,
+                `Tix:${S.txId}  Reversal  +${money(amt)}  ${S.lastTransferNumber}`);
+      }));
+    }
+    msg("Doorasho khaldan.", back);
+  });
+}
+
+// ----- 8. Bill Payment -----
+function billPayment() {
+  ask("Bill Payment\n1. Koronto (Electricity)\n2. Biyo (Water)\n3. Waxbarasho (School fees)\n4. Internet & TV\n0. Dib u noqo", v => {
+    if (v === "0") return mainMenu();
+    const companies = { "1": "BECO ELECTRICITY", "2": "MOGADISHU WATER", "3": "SCHOOL FEES", "4": "HORMUUD FIBER" };
+    const c = companies[v];
+    if (!c) return msg("Doorasho khaldan.", back);
+    ask("Geli lambarka akoonka / mitirka:", acc => {
+      if (acc.length < 4) return msg("Lambarka akoonka waa khalad.", back);
+      askAmount(a => confirmBox(`Ma hubtaa inaad ${money(a)} u bixiso ${c}, Akoon: ${acc}?`, () => askPin(() => {
+        S.balance -= a; S.txId++;
+        success(`[-EVCPlus-] ${money(a)} ayaad u bixisay ${c} (${acc}), Tix: ${S.txId}, Haraagaagu waa ${money(S.balance)}`,
+                `Tix:${S.txId}  ${c}  -${money(a)}`);
+      })));
+    });
+  });
+}
+
+// ======================================================================
+//  MESSAGES
+// ======================================================================
+const fmtTime = d => d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" });
+const threads = [
+  { name: "EVCPlus", unread: false, readonly: true, msgs: [{ me: false, text: "[-EVCPlus-] Ku soo dhawoow EVCPlus. Garaac *770# si aad u isticmaasho adeegga.", t: "Yesterday" }] },
+  { name: "Hooyo", unread: false, msgs: [{ me: false, text: "Wiilkeyga ma nabad baa? Soo wac markaad firaaqo hesho 🤲", t: "Yesterday" }, { me: true, text: "Haa hooyo waan fiicanahay, waan ku soo wacayaa", t: "Yesterday" }] },
+  { name: "Hodan Mohamed", unread: false, msgs: [{ me: false, text: "Casharka Java berri ma jiraa?", t: "Monday" }] }
+];
+let openThread = null;
+function unreadCount() { return threads.filter(t => t.unread).length; }
+function renderBadge() { const n = unreadCount(); $("msgBadge").style.display = n ? "flex" : "none"; $("msgBadge").textContent = n; }
+function renderThreads() {
+  const el = $("threads"); el.innerHTML = "";
+  threads.forEach(t => {
+    const last = t.msgs[t.msgs.length - 1];
+    const b = document.createElement("button");
+    b.className = "thread-row";
+    b.innerHTML = `<span class="dot" style="display:${t.unread ? "block" : "none"}"></span><div class="avatar">${t.name === "EVCPlus" ? "💳" : initials(t.name)}</div><div class="t-main"><div class="t-top"><span></span><small>${last.t} ›</small></div><div class="t-prev"></div></div>`;
+    b.querySelector(".t-top span").textContent = t.name;
+    b.querySelector(".t-prev").textContent = last.text;
+    b.onclick = () => showThread(t);
+    el.appendChild(b);
+  });
+  renderBadge();
+}
+function showThread(t) {
+  openThread = t; t.unread = false;
+  $("msgList").style.display = "none"; $("msgThread").style.display = "flex";
+  $("threadName").textContent = t.name;
+  $("composer").style.display = t.readonly ? "none" : "flex";
+  renderBubbles(); renderBadge();
+}
+function renderBubbles() {
+  const el = $("bubbles"); el.innerHTML = "";
+  let lastT = null;
+  openThread.msgs.forEach(m => {
+    if (m.t !== lastT) { const tt = document.createElement("div"); tt.className = "btime"; tt.textContent = m.t; el.appendChild(tt); lastT = m.t; }
+    const b = document.createElement("div");
+    b.className = "bubble " + (m.me ? "me" : "them");
+    b.textContent = m.text;
+    el.appendChild(b);
+  });
+  el.scrollTop = el.scrollHeight;
+}
+$("threadBack").onclick = () => { openThread = null; $("msgThread").style.display = "none"; $("msgList").style.display = "flex"; renderThreads(); };
+function sendMsg() {
+  const v = $("msgInput").value.trim(); if (!v || !openThread) return;
+  openThread.msgs.push({ me: true, text: v, t: fmtTime(new Date()) });
+  $("msgInput").value = ""; renderBubbles();
+}
+$("msgSend").onclick = sendMsg;
+$("msgInput").addEventListener("keydown", e => { if (e.key === "Enter") sendMsg(); });
+
+function receiveSms(from, text) {
+  const t = threads.find(x => x.name === from);
+  t.msgs.push({ me: false, text, t: fmtTime(new Date()) });
+  threads.splice(threads.indexOf(t), 1); threads.unshift(t);
+  const viewing = currentApp === "messages" && openThread === t;
+  t.unread = !viewing;
+  if (viewing) renderBubbles(); else renderThreads();
+  renderBadge();
+  if (!viewing) notify(from, text, () => { openApp("messages"); showThread(t); });
+}
+
+// ======================================================================
+//  PHOTOS + CAMERA
+// ======================================================================
+const photos = [
+  { bg: "linear-gradient(#5fc3e4,#e8d9a9)", e: "🏖️", cap: "Lido Beach, Muqdisho" },
+  { bg: "linear-gradient(#ff7e5f,#feb47b)", e: "🌅", cap: "Qorrax dhac" },
+  { bg: "linear-gradient(#e6c48a,#b6894c)", e: "🐪", cap: "Geel" },
+  { bg: "linear-gradient(#a8e063,#56ab2f)", e: "🌳", cap: "Beerta" },
+  { bg: "linear-gradient(#2c3e50,#4ca1af)", e: "🕌", cap: "Masjidka" },
+  { bg: "linear-gradient(#f6d365,#fda085)", e: "☕", cap: "Shaah subax" },
+  { bg: "linear-gradient(#4568dc,#b06ab3)", e: "🎓", cap: "Jaamacadda" },
+  { bg: "linear-gradient(#43cea2,#185a9d)", e: "⛵", cap: "Badda" },
+  { bg: "linear-gradient(#ee9ca7,#ffdde1)", e: "🍰", cap: "Dhalashada" },
+  { bg: "linear-gradient(#232526,#414345)", e: "💻", cap: "Java project" },
+  { bg: "linear-gradient(#f7971e,#ffd200)", e: "🥭", cap: "Cambe" },
+  { bg: "linear-gradient(#00c6ff,#0072ff)", e: "🇸🇴", cap: "Soomaaliya" }
+];
+function renderPhotos() {
+  const el = $("photoGrid"); el.innerHTML = "";
+  photos.forEach(p => {
+    const b = document.createElement("button");
+    b.className = "photo";
+    if (p.src) b.style.backgroundImage = `url(${p.src})`; else { b.style.background = p.bg; b.textContent = p.e; }
+    b.onclick = () => {
+      $("viewer").classList.add("on");
+      const big = $("viewerBig");
+      big.textContent = p.src ? "" : p.e;
+      big.style.background = p.src ? `center / contain no-repeat url(${p.src})` : p.bg;
+      $("viewerCap").textContent = p.cap;
+      $("status").classList.remove("dark-text");
+    };
+    el.appendChild(b);
+  });
+}
+$("viewerBack").onclick = () => { $("viewer").classList.remove("on"); updateChrome(); };
+
+let camStream = null;
+async function startCam() {
+  $("camMsg").textContent = "Starting camera…";
+  try {
+    camStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+    $("camVideo").srcObject = camStream; $("camMsg").textContent = "";
+  } catch (e) {
+    $("camMsg").textContent = "Camera not available. Press the shutter to take a sample photo.";
+  }
+}
+function stopCam() { if (camStream) { camStream.getTracks().forEach(t => t.stop()); camStream = null; } }
+$("shutter").onclick = () => {
+  $("flash").style.opacity = 1; setTimeout(() => $("flash").style.opacity = 0, 120);
+  const v = $("camVideo");
+  let p;
+  if (camStream && v.videoWidth) {
+    const c = document.createElement("canvas");
+    c.width = v.videoWidth; c.height = v.videoHeight;
+    const x = c.getContext("2d"); x.translate(c.width, 0); x.scale(-1, 1); x.drawImage(v, 0, 0);
+    p = { src: c.toDataURL("image/jpeg", .85), cap: "Camera · " + fmtTime(new Date()) };
+    $("camThumb").style.backgroundImage = `url(${p.src})`;
+  } else {
+    p = { bg: WALLS[Math.floor(Math.random() * WALLS.length)], e: "📸", cap: "Camera · " + fmtTime(new Date()) };
+    $("camThumb").style.background = p.bg;
+  }
+  photos.unshift(p);
+};
+$("camThumb").onclick = () => openApp("photos");
+
+// ======================================================================
+//  CALCULATOR
+// ======================================================================
+let cCur = "0", cPrev = null, cOp = null, cFresh = false;
+const CK = [["AC","fn"],["±","fn"],["%","fn"],["÷","op"],["7"],["8"],["9"],["×","op"],["4"],["5"],["6"],["−","op"],["1"],["2"],["3"],["+","op"],["0","zero"],["."],["=","op"]];
+CK.forEach(([k, cls]) => {
+  const b = document.createElement("button");
+  b.className = "ck " + (cls || ""); b.textContent = k; b.dataset.k = k;
+  b.onclick = () => calcPress(k);
+  $("calcKeys").appendChild(b);
+});
+function calcFmt(n) { if (!isFinite(n)) return "Error"; return String(parseFloat(n.toPrecision(10))); }
+function calcCompute() {
+  const a = cPrev, b = parseFloat(cCur);
+  const r = cOp === "+" ? a + b : cOp === "−" ? a - b : cOp === "×" ? a * b : a / b;
+  cCur = calcFmt(r); cPrev = r;
+}
+function calcPress(k) {
+  if (/[0-9]/.test(k)) { if (cFresh || cCur === "0") cCur = k; else if (cCur.length < 9) cCur += k; cFresh = false; }
+  else if (k === ".") { if (cFresh) { cCur = "0."; cFresh = false; } else if (!cCur.includes(".")) cCur += "."; }
+  else if (k === "AC") { cCur = "0"; cPrev = null; cOp = null; }
+  else if (k === "±") cCur = calcFmt(-parseFloat(cCur));
+  else if (k === "%") cCur = calcFmt(parseFloat(cCur) / 100);
+  else if (k === "=") { if (cOp && !cFresh) { calcCompute(); cOp = null; cFresh = true; } else if (cOp) { cOp = null; } }
+  else { if (cOp && !cFresh) calcCompute(); else cPrev = parseFloat(cCur); cOp = k; cFresh = true; }
+  const d = $("calcDisp"); d.textContent = Number(cCur).toLocaleString("en-US", { maximumFractionDigits: 8 }) === "NaN" ? cCur : (cCur.endsWith(".") ? cCur : Number(cCur).toLocaleString("en-US", { maximumFractionDigits: 8 }));
+  d.style.fontSize = d.textContent.length > 7 ? "60px" : "86px";
+  document.querySelectorAll(".ck.op").forEach(b => b.classList.toggle("sel", b.dataset.k === cOp && cFresh));
+}
+
+// ======================================================================
+//  CLOCK / WEATHER / CALENDAR / NOTES / SETTINGS
+// ======================================================================
+const ZONES = [["Muqdisho", "Africa/Mogadishu"], ["Nairobi", "Africa/Nairobi"], ["Dubai", "Asia/Dubai"], ["London", "Europe/London"], ["Minneapolis", "America/Chicago"]];
+function renderClock() {
+  const d = new Date();
+  $("bigClock").textContent = d.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", second: "2-digit" });
+  $("bigDate").textContent = d.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric", year: "numeric" });
+  $("worldClocks").innerHTML = ZONES.map(([n, z]) => {
+    const t = d.toLocaleTimeString("en-US", { timeZone: z, hour: "numeric", minute: "2-digit" });
+    return `<div class="wc"><div class="c1"><small>${d.toLocaleDateString("en-US", { timeZone: z, weekday: "short" })}</small><b>${n}</b></div><div class="c2">${t}</div></div>`;
+  }).join("");
+}
+function renderWeather() {
+  const h = new Date().getHours();
+  const icons = ["☀️", "☀️", "⛅", "⛅", "🌤️", "🌙"];
+  $("hours").innerHTML = [0, 1, 2, 3, 4, 5].map(i => `<div><span>${i === 0 ? "Now" : ((h + i) % 24) + ":00"}</span><span>${icons[i]}</span><b>${31 - i}°</b></div>`).join("");
+  const days = ["Today", "Thu", "Fri", "Sat", "Sun", "Mon", "Tue"];
+  $("days").innerHTML = days.map((d, i) => `<div><span style="width:60px">${d}</span><span>${["☀️","⛅","☀️","🌦️","☀️","⛅","☀️"][i]}</span><span style="opacity:.7">${25 + (i % 2)}°</span><b>${32 - (i % 3)}°</b></div>`).join("");
+}
+function renderCalendar() {
+  const d = new Date(), y = d.getFullYear(), m = d.getMonth();
+  $("calTitle").textContent = d.toLocaleDateString("en-US", { month: "long", year: "numeric" });
+  const first = new Date(y, m, 1).getDay(), total = new Date(y, m + 1, 0).getDate();
+  let html = ["S","M","T","W","T","F","S"].map(x => `<div class="h">${x}</div>`).join("");
+  for (let i = 0; i < first; i++) html += "<div></div>";
+  for (let n = 1; n <= total; n++) html += `<div>${n === d.getDate() ? `<div class="today">${n}</div>` : n}</div>`;
+  $("calGrid").innerHTML = html;
+}
+try { $("notes").value = localStorage.getItem("evc-notes") || "Java – EVCPlus project ✅\n\n• Variables\n• Data types\n• Conditions\n• Loops"; } catch (e) {}
+$("notes").addEventListener("input", () => { try { localStorage.setItem("evc-notes", $("notes").value); } catch (e) {} });
+
+function renderWalls() {
+  const el = $("walls"); el.innerHTML = "";
+  WALLS.forEach((w, i) => {
+    const b = document.createElement("button");
+    b.className = "wall-opt" + (i === wallIdx ? " on" : ""); b.style.background = w;
+    b.onclick = () => setWall(i);
+    el.appendChild(b);
+  });
+}
+function setTheme(dark) { screen.dataset.theme = dark ? "dark" : "light"; $("tDark").classList.toggle("on", dark); $("ccDark").classList.toggle("on", dark); }
+$("tDark").onclick = () => setTheme(screen.dataset.theme !== "dark");
+let wifiOn = true, btOn = true, torchOn = false;
+function setAirplane(v) {
+  airplane = v;
+  $("tPlane").classList.toggle("on", v);
+  $("ccPlane").classList.toggle("on", v);
+  $("ccCell").classList.toggle("on", !v);
+  $("sPlane").style.display = v ? "inline" : "none";
+  $("sSignal").style.display = v ? "none" : "inline";
+}
+$("tPlane").onclick = () => setAirplane(!airplane);
+
+// ===== Control Center =====
+function openCC() { $("cc").classList.add("on"); }
+function closeCC() { $("cc").classList.remove("on"); }
+$("ccHot").onclick = openCC;
+$("cc").addEventListener("click", e => { if (e.target.id === "cc" || e.target.classList.contains("cc-grid")) closeCC(); });
+$("ccPlane").onclick = () => setAirplane(!airplane);
+$("ccCell").onclick = () => setAirplane(!airplane);
+$("ccWifi").onclick = () => { wifiOn = !wifiOn; $("ccWifi").classList.toggle("on", wifiOn); $("sWifi").style.display = wifiOn ? "inline" : "none"; };
+$("ccBt").onclick = () => { btOn = !btOn; $("ccBt").classList.toggle("on", btOn); };
+$("ccRot").onclick = () => $("ccRot").classList.toggle("on");
+$("ccDark").onclick = () => setTheme(screen.dataset.theme !== "dark");
+function setTorch(v) { torchOn = v; $("ccTorch").classList.toggle("on", v); $("lockTorch").classList.toggle("on", v); }
+$("ccTorch").onclick = () => setTorch(!torchOn);
+$("lockTorch").addEventListener("pointerdown", e => e.stopPropagation());
+$("lockTorch").addEventListener("pointerup", e => { e.stopPropagation(); setTorch(!torchOn); });
+$("lockCam").addEventListener("pointerdown", e => e.stopPropagation());
+$("lockCam").addEventListener("pointerup", e => { e.stopPropagation(); unlock(); openApp("camera"); });
+$("ccTimer").onclick = () => { if (!locked) openApp("clock"); };
+$("ccCalc").onclick = () => { if (!locked) openApp("calc"); };
+$("ccCam").onclick = () => { if (locked) unlock(); openApp("camera"); };
+function slider(el, onChange) {
+  const set = e => {
+    const r = el.getBoundingClientRect();
+    const v = Math.min(1, Math.max(0, (r.bottom - e.clientY) / r.height));
+    el.querySelector(".fill").style.height = (v * 100) + "%";
+    onChange(v);
+  };
+  el.addEventListener("pointerdown", e => { el.setPointerCapture(e.pointerId); set(e); el.onpointermove = set; });
+  el.addEventListener("pointerup", () => { el.onpointermove = null; });
+}
+slider($("ccBright"), v => $("dim").style.opacity = (1 - v) * 0.7);
+slider($("ccVol"), () => {});
+
+const APPS = {
+  phone: { open: () => renderDial() },
+  messages: { open: () => { if (!openThread) renderThreads(); else renderBubbles(); } },
+  photos: { open: renderPhotos, close: () => $("viewer").classList.remove("on") },
+  camera: { open: startCam, close: stopCam },
+  clock: { open: renderClock },
+  weather: { open: renderWeather },
+  calendar: { open: renderCalendar },
+  contacts: { open: renderContacts }
+};
+
+// ======================================================================
+//  KEYBOARD (computer keyboard works too)
+// ======================================================================
+document.addEventListener("keydown", e => {
+  if (alertOpen) {
+    if (e.key === "Enter") $("aSend").click();
+    if (e.key === "Escape") $("aCancel").click();
+    return;
+  }
+  if (document.activeElement && ["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) return;
+  if (locked) { if (e.key === "Enter" || e.key === " " || e.key === "ArrowUp") unlock(); return; }
+  if (e.key === "Escape") { if ($("cc").classList.contains("on")) closeCC(); else closeApp(); return; }
+  if (currentApp === "phone" && $("pg-keypad").classList.contains("on")) {
+    if (/^[0-9*#]$/.test(e.key)) pressKey(e.key);
+    else if (e.key === "Backspace") $("delBtn").click();
+    else if (e.key === "Enter") placeCall();
+  }
+  if (currentApp === "calc") {
+    const map = { "/": "÷", "*": "×", "-": "−", "+": "+", "Enter": "=", "=": "=", "Escape": "AC", "Backspace": "AC", "%": "%", ".": "." };
+    if (/^[0-9]$/.test(e.key)) calcPress(e.key); else if (map[e.key]) calcPress(map[e.key]);
+  }
+});
+
+// fit the phone to the window
+function fit() {
+  const s = Math.min(1, (window.innerHeight - 30) / 830, (window.innerWidth - 30) / 410);
+  $("device").style.zoom = s;
+}
+window.addEventListener("resize", fit);
+
+// start
+setWall(0);
+setTheme(window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
+renderContacts(); renderThreads(); renderDial(); tick(); fit(); updateChrome();
+</script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+# Compiled Java
+*.class
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
