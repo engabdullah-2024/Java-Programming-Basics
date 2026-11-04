@@ -68,3 +68,7 @@ Java 27 is installed. Test with piped input, for example:
 - Somali text in program output, with English in brackets where it helps.
 - Money format: `printf("%.2f")` / `$` prefix.
 - IDE hints like "Convert to switch" or "try-with-resources" are style suggestions. Ignore them, because the student hasn't learned those yet.
+
+## Git
+
+- Never add `Co-Authored-By: Claude` or `Claude-Session` lines (or any Claude attribution) to commits or PRs. Commits are authored only by engabdullah-2024.
