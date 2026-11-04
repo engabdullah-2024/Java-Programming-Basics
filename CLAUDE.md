@@ -12,7 +12,7 @@ Java practice folder for a beginner Software Engineering student (Abdalla). The 
 
 ## Repo layout
 
-GitHub: https://github.com/engabdullah-2024/Java-Basics (branch `main`). This is a public beginner course.
+GitHub: https://github.com/engabdullah-2024/Java-Programming-Basics (branch `main`). This is a public beginner course.
 
 ```
 01-what-is-java/         HelloWorld.java, AboutMe.java
